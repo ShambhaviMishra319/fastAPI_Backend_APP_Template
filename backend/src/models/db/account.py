@@ -52,3 +52,4 @@ class Account(Base):
          self._hash_salt=hash_salt
 
 
+#Getter and setter exist so data can be changed only in ways the system allows, not in ways developers feel like.
