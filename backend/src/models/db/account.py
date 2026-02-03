@@ -34,7 +34,7 @@ class Account(Base):
 
 #without property we have to call like user.hashed_password()
 #but we want to write it like a variable and not like function
-#with property looks like a variable bvut behaves like a function
+#with property looks like a variable but behaves like a function,@property turns a method into a computed attribute
     @property
     def hashed_password(self)->str:
         return self._hashed_password
