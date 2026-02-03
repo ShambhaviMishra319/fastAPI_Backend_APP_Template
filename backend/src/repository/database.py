@@ -24,15 +24,15 @@ class AsyncDatabase:
     def __init__(self):
 
         self.postgres_uri:pydantic.PostgresDsn=pydantic.PostgresDsn(
-            url=f"something",
-            scheme=f"something"
+             url=f"{settings.DB_POSTGRES_SCHEMA}://{settings.DB_POSTGRES_USENRAME}:{settings.DB_POSTGRES_PASSWORD}@{settings.DB_POSTGRES_HOST}:{settings.DB_POSTGRES_PORT}/{settings.DB_POSTGRES_NAME}",
+             scheme=settings.DB_POSTGRES_SCHEMA,
         )
 
         self.async_engine:AsyncEngine=create_async_engine(
             url=self.set_async_db_uri,
-            echo="something",
-            pool_size="something",
-            max_overflow="something",
+            echo=settings.IS_DB_ECHO_LOG,
+            pool_size=settings.DB_POOL_SIZE,
+            max_overflow=settings.DB_POOL_OVERFLOW,
             poolclass=QueuePool
 
         )
