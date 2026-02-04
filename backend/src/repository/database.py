@@ -14,33 +14,35 @@
 
 import pydantic
 import sqlalchemy
-from sqlalchemy.ext.asyncio import AsyncEngine,AsyncSession,async_sessionmaker,create_async_engine
-from sqlalchemy.pool import Pool,QueuePool
+#AsyncSession=one db transaction , async_sessionmaker= a factory that creates AsyncSession
+#We NEVER store AsyncSession in an init time because that would create one global session and will cause random transaction leaks
+from sqlalchemy.ext.asyncio import AsyncEngine,create_async_engine,AsyncSession,async_sessionmaker
 from src.config.manager import settings
+from sqlalchemy.pool import Pool
 
 class AsyncDatabase:
     #Eager initialization
     #One action. One invariant.
     def __init__(self):
 
-        self.postgres_uri:pydantic.PostgresDsn=pydantic.PostgresDsn(
-             url=f"{settings.DB_POSTGRES_SCHEMA}://{settings.DB_POSTGRES_USENRAME}:{settings.DB_POSTGRES_PASSWORD}@{settings.DB_POSTGRES_HOST}:{settings.DB_POSTGRES_PORT}/{settings.DB_POSTGRES_NAME}",
-             scheme=settings.DB_POSTGRES_SCHEMA,
+        self.postgres_url:pydantic.PostgresDsn = pydantic.PostgresDsn(
+        url=f"{settings.DB_POSTGRES_SCHEMA}://{settings.DB_POSTGRES_USERNAME}:{settings.DB_POSTGRES_PASSWORD}@{settings.DB_POSTGRES_HOST}:{settings.DB_POSTGRES_PORT}/{settings.DB_POSTGRES_NAME}",
+        scheme=f"{settings.DB_POSTGRES_SCHEMA}"
         )
 
         self.async_engine:AsyncEngine=create_async_engine(
             url=self.set_async_db_uri,
             echo=settings.IS_DB_ECHO_LOG,
             pool_size=settings.DB_POOL_SIZE,
-            max_overflow=settings.DB_POOL_OVERFLOW,
-            poolclass=QueuePool
-
+            max_overflow=settings.DB_POOL_OVERFLOW
         )
 
-    @property
-    #setting syncronous database drivers to asyncronous as postgres defaults to sync,and async requires "postgressql+asyncpg"
-    def set_async_db_uri(self)->str | pydantic.PostgresDsn:
-        return self.postgres_async_uri.replace("postgresql://","postgresql+asyncpg://")
+        #session factory 
+        self.async_session:async_sessionmaker=async_sessionmaker(bind=self.async_engine,expire_on_commit=False)
 
+    @property
+    def set_async_db_uri(self)->str | pydantic.PostgresDsn:
+        return self.postgres_url.replace("postgresql://","postgresql+asyncpg://")
+        
 
 async_db:AsyncDatabase=AsyncDatabase()
